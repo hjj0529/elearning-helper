@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         铁塔 e 学自动学习助手
 // @namespace    tower-study-helper
-// @version      1.7.26
-// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课；v1.7.18 新增课程列表页会话保活：默认开启、10分钟一次（5-60分钟可调），用 Web Worker 定时器（不受后台标签降频影响）周期性向平台发轻量同源请求维持登录会话，防止挂机一段时间后被平台登出导致无法继续学习；心跳全程纯后台不改标题不碰焦点不影响用户其他工作，仅当检测到登录态失效时告警（标签标题红字+页面红色横幅+尽力弹前台）；v1.7.19 增强自动翻页可靠性：翻页后课程 ID 识别由单次等待改为每 2 秒重试（最长 30 秒）不再立即暂停，翻页点击 25 秒后列表无变化时自动重试一次翻页，慢网络下多页自动学习不再中断；v1.7.20 会话保活改为纯保活模式：移除登录态检测与告警（启发式判定在登录状态良好时误报"登录已失效"横幅，平台真实登出表现为整页跳转 OA 登录页无需插件判定），只保留周期心跳维持会话；v1.7.21 移除面板"标题调试"功能（含播放页写标题心跳等整套逻辑，该功能已无实际作用），标签名恒与平台一致；v1.7.22 修复"视频已在自动播放但面板停留提示'已点击播放按钮，等待播放器响应'"：进场时序留下的等待类陈旧消息在检测到视频确实播放后自动纠正为"正在播放：第N节"；v1.7.23 修复"学完关播放页后清单页未刷新、反复重开刚学完课程"死循环：详情页不再与列表页竞争消费完成信号键、写回状态前先读回最新进度不覆盖、新增独立"本会话已学完"清单硬跳过、列表刷新后等数据稳定+缓冲数秒再重新取状态选下一课；v1.7.24 修复"播放页提示已暂停：当前页未完成课程队列已处理完、不再与列表页互动翻页"回归：播放页队列耗尽时不再就地暂停（避免 running=false 同步给列表页造成全局停摆），改为通知列表页刷新并由列表侧完成选课与翻页；v1.7.25 优化播放器检测机制：PPT/文档章节播放器加载慢时不再立即报"暂未发现可控制的播放器"，先按"加载中"等待 90 秒（每 10 秒刷新已等待秒数）并持续重试，播放器一出现即接管自动播放，播放按钮退化查找范围扩大；v1.7.26 面板新增"选课顺序"下拉：顺序学习（默认，列表页从上到下）/倒序学习/高学时优先/低学时优先，点开始学习后按此顺序构建学习队列，运行中更改会立即重排剩余队列，学完一课后按设定顺序继续
+// @version      1.7.27
+// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课；v1.7.18 新增课程列表页会话保活：默认开启、10分钟一次（5-60分钟可调），用 Web Worker 定时器（不受后台标签降频影响）周期性向平台发轻量同源请求维持登录会话，防止挂机一段时间后被平台登出导致无法继续学习；心跳全程纯后台不改标题不碰焦点不影响用户其他工作，仅当检测到登录态失效时告警（标签标题红字+页面红色横幅+尽力弹前台）；v1.7.19 增强自动翻页可靠性：翻页后课程 ID 识别由单次等待改为每 2 秒重试（最长 30 秒）不再立即暂停，翻页点击 25 秒后列表无变化时自动重试一次翻页，慢网络下多页自动学习不再中断；v1.7.20 会话保活改为纯保活模式：移除登录态检测与告警（启发式判定在登录状态良好时误报"登录已失效"横幅，平台真实登出表现为整页跳转 OA 登录页无需插件判定），只保留周期心跳维持会话；v1.7.21 移除面板"标题调试"功能（含播放页写标题心跳等整套逻辑，该功能已无实际作用），标签名恒与平台一致；v1.7.22 修复"视频已在自动播放但面板停留提示'已点击播放按钮，等待播放器响应'"：进场时序留下的等待类陈旧消息在检测到视频确实播放后自动纠正为"正在播放：第N节"；v1.7.23 修复"学完关播放页后清单页未刷新、反复重开刚学完课程"死循环：详情页不再与列表页竞争消费完成信号键、写回状态前先读回最新进度不覆盖、新增独立"本会话已学完"清单硬跳过、列表刷新后等数据稳定+缓冲数秒再重新取状态选下一课；v1.7.24 修复"播放页提示已暂停：当前页未完成课程队列已处理完、不再与列表页互动翻页"回归：播放页队列耗尽时不再就地暂停（避免 running=false 同步给列表页造成全局停摆），改为通知列表页刷新并由列表侧完成选课与翻页；v1.7.25 优化播放器检测机制：PPT/文档章节播放器加载慢时不再立即报"暂未发现可控制的播放器"，先按"加载中"等待 90 秒（每 10 秒刷新已等待秒数）并持续重试，播放器一出现即接管自动播放，播放按钮退化查找范围扩大；v1.7.26 面板新增"选课顺序"下拉：顺序学习（默认，列表页从上到下）/倒序学习/高学时优先/低学时优先，点开始学习后按此顺序构建学习队列，运行中更改会立即重排剩余队列，学完一课后按设定顺序继续；v1.7.27 修复 PPT 章节"有大播放按钮却不点击"问题：无 video/无 play-btn 时先走 PPT 播放器启动流程——播放器区域出现后缓冲 2 秒等就绪再找大播放按钮点击，播放迹象靠按钮消失/暂停控件出现判断，无迹象按 4/8/16/30 秒指数退避重试，找不到控件时打印容器 DOM 供排查
 // @match        https://elearning.chinatowercom.cn/*
 // @run-at       document-start
 // @grant        none
@@ -11,10 +11,10 @@
 (() => {
   'use strict';
 
-  if (window.__towerStudyHelper195) return;
-  window.__towerStudyHelper195 = true;
+  if (window.__towerStudyHelper196) return;
+  window.__towerStudyHelper196 = true;
 
-  const VERSION = '1.7.26';
+  const VERSION = '1.7.27';
 
   const STORE_KEY = 'towerStudyHelperCourseIdsV1';
   const STATE_KEY = 'towerStudyHelperAutoStateV152';
@@ -77,6 +77,11 @@
   // 进场先按"加载中"持续等待并重试，超窗后才提示未发现播放器。
   const PLAYER_WAIT_NOTICE_MS = 90000;
   const PLAYER_WAIT_MSG_INTERVAL = 10000;
+
+  // v1.7.27：PPT/文档类播放器启动参数。容器出现后先缓冲等就绪再点击，
+  // 点击后留观察期避免监控循环反复乱点（观察期按次数指数退避）。
+  const PPT_PLAY_READY_DELAY_MS = 2000;
+  const PPT_PLAY_RETRY_INTERVAL_MS = 4000;
 
   // v1.7.26：选课顺序选项（面板下拉，点"开始学习"后按此顺序构建学习队列）
   const COURSE_ORDER_LABELS = {
@@ -157,6 +162,14 @@
   let playerWaitStart = 0;
   let playerWaitLastMsgAt = 0;
   let playerWaitNotified = false;
+
+  // v1.7.27：PPT 播放器启动状态（按"课程|章节"键切换时重置）
+  let pptPlayerKey = '';
+  let pptContainerSeenAt = 0;
+  let pptPlayClickAt = 0;
+  let pptPlayAttempts = 0;
+  let pptClickedEl = null;
+  let pptDomCaptured = false;
 
   // =========================================================
   // 1. 通用工具、课程 ID 和手动跳过名单
@@ -1288,7 +1301,7 @@
   // 修法：确认在播时，若当前消息属于等待/失败类陈旧文案，纠正为
   // "正在播放：第N节"；只在文案陈旧时纠正一次，不逐 tick 刷屏。
   const STALE_PLAYBACK_MESSAGE_RE =
-    /等待播放器响应|未发现可控制的播放器|未发现播放器|等待播放器加载|自动播放未成功|自动播放遇到异常/;
+    /等待播放器响应|未发现可控制的播放器|未发现播放器|等待播放器加载|就绪后点击播放|PPT 播放按钮|自动播放未成功|自动播放遇到异常/;
 
   function correctPlaybackMessageIfStale() {
     const current = lastMessage || state.message || '';
@@ -1341,10 +1354,218 @@
       // 超窗仍无播放器：区分"PPT/文档章节（平台自动计时）"与真异常
       setMessage(
         isNonVideoContent()
-          ? '当前章节为 PPT/文档类且未发现播放器，等待平台自动计时完成'
+          ? 'PPT/文档章节未找到可点击的播放控件，等待平台自动计时完成'
           : '当前章节暂未发现可控制的播放器，将持续重试'
       );
     }
+  }
+
+  // =========================================================
+  // v1.7.27：PPT/文档类播放器启动（无 <video>、无 .play-btn 的章节）
+  // 可见性判断复用第 7 节的 isElementVisible（同作用域函数声明提升）。
+  // =========================================================
+
+  // 元素是否带"播放"语义（类名 / aria-label / title / svg use），且不是暂停控件
+  function hasPlaySemantic(el) {
+    if (!el || !el.getAttribute) return false;
+
+    const cls = String(el.getAttribute('class') || '');
+    const aria = String(el.getAttribute('aria-label') || '');
+    const title = String(el.getAttribute('title') || '');
+    let useHref = '';
+
+    try {
+      const uses = el.tagName === 'USE'
+        ? [el]
+        : [...(el.querySelectorAll ? el.querySelectorAll('use') : [])];
+
+      useHref = uses.map(u =>
+        String(u.getAttribute('href') || u.getAttribute('xlink:href') || '')
+      ).join(' ');
+    } catch (_) {}
+
+    const hay = `${cls} ${aria} ${title} ${useHref}`;
+    if (/pause|暂停/i.test(hay)) return false;
+    return /play|播放|▶/i.test(hay);
+  }
+
+  function findPlayerContainer() {
+    return (
+      document.querySelector('.box.video-component') ||
+      document.querySelector('[class*="video-component"]') ||
+      document.querySelector('[class*="ppt-player" i]') ||
+      document.querySelector('[class*="player-container" i]') ||
+      null
+    );
+  }
+
+  // 在播放器区域（及页面级兜底）里找可点击的大播放按钮
+  function findPptPlayCandidate(container) {
+    const tryList = list => {
+      for (const el of list) {
+        if (!isElementVisible(el)) continue;
+        if (!hasPlaySemantic(el)) continue;
+        return el;
+      }
+      return null;
+    };
+
+    if (container) {
+      // 1) 平台预览遮罩里的大播放图（img.cursor-pointer 结构）
+      for (const image of container.querySelectorAll('img')) {
+        if (
+          image.classList.contains('cursor-pointer') &&
+          isElementVisible(image)
+        ) return image;
+      }
+
+      // 2) 常见大播放按钮 class
+      const commonSelectors =
+        '[class*="play-btn" i], [class*="big-play" i], [class*="bigPlay" i], ' +
+        '[class*="poster-play" i], [class*="play-overlay" i], [class*="btn-play" i], ' +
+        '.vjs-big-play-button, .play-btn';
+
+      const commonHit = tryList(container.querySelectorAll(commonSelectors));
+      if (commonHit) return commonHit;
+
+      // 3) 容器内任何带播放语义的可点元素（按钮/链接/图标/svg）
+      const clickables = container.querySelectorAll(
+        'button, [role="button"], a, img, svg, use, [class*="play" i], [class*="cursor-pointer" i]'
+      );
+      const clickHit = tryList(clickables);
+      if (clickHit) return clickHit;
+    }
+
+    // 4) 页面级常见大播放按钮兜底（排除插件自身面板）
+    const panel = document.getElementById(PANEL_ID);
+    const pageList = [...document.querySelectorAll(
+      '.vjs-big-play-button, .big-play-button, [class*="big-play" i], ' +
+      '[class*="poster-play" i], img.cursor-pointer'
+    )].filter(el => !panel || !panel.contains(el));
+
+    return tryList(pageList);
+  }
+
+  // 是否已有播放迹象（无 <video> 时靠"按钮消失/出现暂停控件"判断）
+  function pptPlaybackStarted() {
+    const video = getVideo();
+    if (video) return videoIsPlaying(video);
+
+    // 点击过的按钮已隐藏或被移除 → 播放器通常已进入播放态
+    if (pptClickedEl) {
+      if (!pptClickedEl.isConnected || !isElementVisible(pptClickedEl)) {
+        return true;
+      }
+    }
+
+    // 容器内出现"暂停"语义控件 → 正在播放
+    const container = findPlayerContainer();
+    if (container) {
+      const controls = container.querySelectorAll(
+        'button, [role="button"], a, svg, use'
+      );
+
+      for (const el of controls) {
+        if (!isElementVisible(el)) continue;
+
+        const cls = String(el.getAttribute?.('class') || '');
+        const aria = String(el.getAttribute?.('aria-label') || '');
+        const title = String(el.getAttribute?.('title') || '');
+        const text = String(el.textContent || '');
+
+        if (/pause/i.test(`${cls} ${aria} ${title}`)) return true;
+        if (/暂停/.test(text)) return true;
+      }
+    }
+
+    return false;
+  }
+
+  // v1.7.27：PPT/文档类播放器启动流程。截图确认这类章节页面上有大播放
+  // 按钮，但既无 <video> 也无 .play-btn，旧逻辑直接落进"未发现播放器"，
+  // 从未尝试点击 → 平台不自动播、计时也无法推进。
+  // 现在：容器出现 → 缓冲 2 秒等就绪（用户反馈普通课程进场即点没问题、
+  // PPT 类要等就绪）→ 找大播放按钮点击 → 观察播放迹象 → 无迹象按指数
+  // 退避重试（4s/8s/16s/30s 封顶）。
+  // 返回 true = 已接管（等待就绪/已点击/已在播放），false = 无播放器区域。
+  function tryStartPptLikePlayer() {
+    const container = findPlayerContainer();
+    if (!container) return false;
+
+    const active = getActiveChapter();
+    const chapter = active ? getChapterName(active) : '';
+    const key = `${getCurrentRouteId()}|${chapter}`;
+
+    if (key !== pptPlayerKey) {
+      pptPlayerKey = key;
+      pptContainerSeenAt = Date.now();
+      pptPlayClickAt = 0;
+      pptPlayAttempts = 0;
+      pptClickedEl = null;
+      pptDomCaptured = false;
+    }
+
+    if (!pptContainerSeenAt) pptContainerSeenAt = Date.now();
+
+    if (pptPlaybackStarted()) {
+      const msg = chapter ? `正在播放：${chapter}` : 'PPT 正在播放';
+      if (lastMessage !== msg) setMessage(msg);
+      return true;
+    }
+
+    const now = Date.now();
+
+    // 就绪缓冲：容器刚出现时播放器还在初始化，先等一会儿再动手
+    if (now - pptContainerSeenAt < PPT_PLAY_READY_DELAY_MS) {
+      const msg = '检测到播放器区域，等待就绪后点击播放…';
+      if (lastMessage !== msg) setMessage(msg);
+      return true;
+    }
+
+    // 点击后的观察期（指数退避），避免 1.2 秒一轮的监控重复乱点
+    if (pptPlayClickAt) {
+      const interval = Math.min(
+        PPT_PLAY_RETRY_INTERVAL_MS *
+          Math.pow(2, Math.max(0, pptPlayAttempts - 1)),
+        30000
+      );
+      if (now - pptPlayClickAt < interval) return true;
+    }
+
+    const candidate = findPptPlayCandidate(container);
+
+    if (!candidate) {
+      // 每章节抓一次容器 DOM 到控制台，便于排查可点控件（用户可复制反馈）
+      if (!pptDomCaptured) {
+        pptDomCaptured = true;
+        try {
+          console.log(
+            '[铁塔助手] PPT 播放器容器 DOM（排查用）：',
+            (container.outerHTML || '').slice(0, 5000)
+          );
+        } catch (_) {}
+      }
+      return false;
+    }
+
+    if (playbackStarting) return true;
+
+    playbackStarting = true;
+    try {
+      pptPlayAttempts++;
+      pptPlayClickAt = Date.now();
+      pptClickedEl = candidate;
+      candidate.click();
+      setMessage(
+        `已点击 PPT 播放按钮（第 ${pptPlayAttempts} 次），等待播放器响应`
+      );
+    } catch (error) {
+      console.warn('[铁塔助手] 点击 PPT 播放按钮失败', error);
+    } finally {
+      playbackStarting = false;
+    }
+
+    return true;
   }
 
   async function ensurePlayback() {
@@ -1357,8 +1578,10 @@
     const button = getPlatformPlayButton();
 
     if (!video && !button) {
-      // v1.7.25：进场瞬间播放器可能还没加载完（PPT 章节尤其慢），
-      // 改为进入等待/重试流程，而不是直接宣告"未发现播放器"。
+      // v1.7.27：PPT/文档类章节常见"有大播放按钮但无 <video>、无 .play-btn"，
+      // 先走 PPT 播放器启动流程（等就绪 → 点击大播放按钮 → 观察播放迹象）。
+      if (tryStartPptLikePlayer()) return;
+      // v1.7.25：播放器区域仍未出现时，进入等待/重试流程。
       handlePlayerNotReady();
       return;
     }

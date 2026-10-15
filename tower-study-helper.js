@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         铁塔 e 学自动学习助手
 // @namespace    tower-study-helper
-// @version      1.7.27
-// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课；v1.7.18 新增课程列表页会话保活：默认开启、10分钟一次（5-60分钟可调），用 Web Worker 定时器（不受后台标签降频影响）周期性向平台发轻量同源请求维持登录会话，防止挂机一段时间后被平台登出导致无法继续学习；心跳全程纯后台不改标题不碰焦点不影响用户其他工作，仅当检测到登录态失效时告警（标签标题红字+页面红色横幅+尽力弹前台）；v1.7.19 增强自动翻页可靠性：翻页后课程 ID 识别由单次等待改为每 2 秒重试（最长 30 秒）不再立即暂停，翻页点击 25 秒后列表无变化时自动重试一次翻页，慢网络下多页自动学习不再中断；v1.7.20 会话保活改为纯保活模式：移除登录态检测与告警（启发式判定在登录状态良好时误报"登录已失效"横幅，平台真实登出表现为整页跳转 OA 登录页无需插件判定），只保留周期心跳维持会话；v1.7.21 移除面板"标题调试"功能（含播放页写标题心跳等整套逻辑，该功能已无实际作用），标签名恒与平台一致；v1.7.22 修复"视频已在自动播放但面板停留提示'已点击播放按钮，等待播放器响应'"：进场时序留下的等待类陈旧消息在检测到视频确实播放后自动纠正为"正在播放：第N节"；v1.7.23 修复"学完关播放页后清单页未刷新、反复重开刚学完课程"死循环：详情页不再与列表页竞争消费完成信号键、写回状态前先读回最新进度不覆盖、新增独立"本会话已学完"清单硬跳过、列表刷新后等数据稳定+缓冲数秒再重新取状态选下一课；v1.7.24 修复"播放页提示已暂停：当前页未完成课程队列已处理完、不再与列表页互动翻页"回归：播放页队列耗尽时不再就地暂停（避免 running=false 同步给列表页造成全局停摆），改为通知列表页刷新并由列表侧完成选课与翻页；v1.7.25 优化播放器检测机制：PPT/文档章节播放器加载慢时不再立即报"暂未发现可控制的播放器"，先按"加载中"等待 90 秒（每 10 秒刷新已等待秒数）并持续重试，播放器一出现即接管自动播放，播放按钮退化查找范围扩大；v1.7.26 面板新增"选课顺序"下拉：顺序学习（默认，列表页从上到下）/倒序学习/高学时优先/低学时优先，点开始学习后按此顺序构建学习队列，运行中更改会立即重排剩余队列，学完一课后按设定顺序继续；v1.7.27 修复 PPT 章节"有大播放按钮却不点击"问题：无 video/无 play-btn 时先走 PPT 播放器启动流程——播放器区域出现后缓冲 2 秒等就绪再找大播放按钮点击，播放迹象靠按钮消失/暂停控件出现判断，无迹象按 4/8/16/30 秒指数退避重试，找不到控件时打印容器 DOM 供排查
+// @version      1.7.28
+// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课；v1.7.18 新增课程列表页会话保活：默认开启、10分钟一次（5-60分钟可调），用 Web Worker 定时器（不受后台标签降频影响）周期性向平台发轻量同源请求维持登录会话，防止挂机一段时间后被平台登出导致无法继续学习；心跳全程纯后台不改标题不碰焦点不影响用户其他工作，仅当检测到登录态失效时告警（标签标题红字+页面红色横幅+尽力弹前台）；v1.7.19 增强自动翻页可靠性：翻页后课程 ID 识别由单次等待改为每 2 秒重试（最长 30 秒）不再立即暂停，翻页点击 25 秒后列表无变化时自动重试一次翻页，慢网络下多页自动学习不再中断；v1.7.20 会话保活改为纯保活模式：移除登录态检测与告警（启发式判定在登录状态良好时误报"登录已失效"横幅，平台真实登出表现为整页跳转 OA 登录页无需插件判定），只保留周期心跳维持会话；v1.7.21 移除面板"标题调试"功能（含播放页写标题心跳等整套逻辑，该功能已无实际作用），标签名恒与平台一致；v1.7.22 修复"视频已在自动播放但面板停留提示'已点击播放按钮，等待播放器响应'"：进场时序留下的等待类陈旧消息在检测到视频确实播放后自动纠正为"正在播放：第N节"；v1.7.23 修复"学完关播放页后清单页未刷新、反复重开刚学完课程"死循环：详情页不再与列表页竞争消费完成信号键、写回状态前先读回最新进度不覆盖、新增独立"本会话已学完"清单硬跳过、列表刷新后等数据稳定+缓冲数秒再重新取状态选下一课；v1.7.24 修复"播放页提示已暂停：当前页未完成课程队列已处理完、不再与列表页互动翻页"回归：播放页队列耗尽时不再就地暂停（避免 running=false 同步给列表页造成全局停摆），改为通知列表页刷新并由列表侧完成选课与翻页；v1.7.25 优化播放器检测机制：PPT/文档章节播放器加载慢时不再立即报"暂未发现可控制的播放器"，先按"加载中"等待 90 秒（每 10 秒刷新已等待秒数）并持续重试，播放器一出现即接管自动播放，播放按钮退化查找范围扩大；v1.7.26 面板新增"选课顺序"下拉：顺序学习（默认，列表页从上到下）/倒序学习/高学时优先/低学时优先，点开始学习后按此顺序构建学习队列，运行中更改会立即重排剩余队列，学完一课后按设定顺序继续；v1.7.27 修复 PPT 章节"有大播放按钮却不点击"问题：无 video/无 play-btn 时先走 PPT 播放器启动流程——播放器区域出现后缓冲 2 秒等就绪再找大播放按钮点击，播放迹象靠按钮消失/暂停控件出现判断，无迹象按 4/8/16/30 秒指数退避重试，找不到控件时打印容器 DOM 供排查；v1.7.28 修复"列表页刷新后分页重置回第 1 页、队列耗尽时从第 1 页逐页重走已完成的页"（页数越多越慢，约 O(N²)）：未运行时以分页器高亮校准页码（人工翻页后开始即从该页起），运行中刷新恢复/队列耗尽时优先"点页码直达"、未渲染目标页码则连续点"下一页"快进（不逐页构建队列）回到目标页再继续
 // @match        https://elearning.chinatowercom.cn/*
 // @run-at       document-start
 // @grant        none
@@ -11,10 +11,10 @@
 (() => {
   'use strict';
 
-  if (window.__towerStudyHelper196) return;
-  window.__towerStudyHelper196 = true;
+  if (window.__towerStudyHelper197) return;
+  window.__towerStudyHelper197 = true;
 
-  const VERSION = '1.7.27';
+  const VERSION = '1.7.28';
 
   const STORE_KEY = 'towerStudyHelperCourseIdsV1';
   const STATE_KEY = 'towerStudyHelperAutoStateV152';
@@ -896,6 +896,17 @@
       if (signature !== lastListSignature) {
         lastListSignature = signature;
         refreshPanel();
+      }
+
+      // v1.7.28：页码校准（纯读取，不触发任何翻页）。仅在未运行时校准，
+      // 供人工翻页后点"开始学习"从该页起；运行中列表页刷新后的第 1 页
+      // 是瞬时状态，不能反过来覆盖"学习进度所在页"的目标页码。
+      if (isListPage() && !isRunning()) {
+        const domPage = readCurrentPageFromDom();
+        if (domPage && domPage !== state.pageNumber) {
+          state.pageNumber = domPage;
+          saveState();
+        }
       }
 
       if (location.hash !== lastRoute) handleRouteChange();
@@ -2772,6 +2783,23 @@
       // 无 opener（手动打开的详情页）：无法通知列表页，退回下方原地翻页尝试
     }
 
+    // v1.7.28：队列耗尽但列表停在目标页之前（刷新丢页码）时，先回到
+    // 记录的目标页再继续，避免从第 1 页逐页重走已完成的页（约 O(N²)）。
+    if (isListPage()) {
+      const domPage = readCurrentPageFromDom();
+      const target = Math.max(1, parseInt(state.pageNumber, 10) || 1);
+
+      if (domPage && target > domPage) {
+        setMessage(`回到第 ${target} 页继续寻找未完成课程`);
+        restoreTargetPage(() => {
+          if (!isRunning()) return;
+          if (tryNextPage()) return;
+          pauseAuto('当前页未完成课程队列已处理完，未找到可用的下一页');
+        });
+        return;
+      }
+    }
+
     if (tryNextPage()) return;
 
     pauseAuto('当前页未完成课程队列已处理完，未找到可用的下一页');
@@ -2813,7 +2841,10 @@
       if (!isRunning()) return;
 
       if (buildQueue()) {
-        state.pageNumber++;
+        // v1.7.28：页码以分页器高亮为准（绝对读数），读不到再退回自增，
+        // 避免漂移的计数在多页场景越走越偏。
+        const domPage = readCurrentPageFromDom();
+        state.pageNumber = domPage || (state.pageNumber + 1);
         saveState();
 
         if (state.queue.length) {
@@ -2881,6 +2912,129 @@
     }, 500);
 
     return true;
+  }
+
+  // =========================================================
+  // v1.7.28：页码校准与"回目标页"（A 方案）
+  // 列表页整页刷新后分页会重置回第 1 页。此前队列耗尽时只能从第 1 页
+  // 逐页重走已完成的页（每页 2~4 秒、含 ID 识别轮询），页数越多累计
+  // 代价越大（约 O(N²)）。现在：以分页器高亮为准校准 state.pageNumber
+  // （人工翻页时也记录），恢复/耗尽时优先"点页码直达"，分页器未渲染
+  // 目标页码时连续点"下一页"快进（不逐页构建队列），回到目标页才继续。
+  // =========================================================
+
+  // 从分页器高亮项读当前页码（读失败返回 0 表示未知）
+  function readCurrentPageFromDom() {
+    const active = document.querySelector(
+      '.el-pagination .el-pager li.is-active, ' +
+      '.el-pagination .el-pager li.is-current, ' +
+      '.el-pagination .el-pager [aria-current="page"], ' +
+      '.el-pager li.is-active, .el-pager li.is-current'
+    );
+    if (!active) return 0;
+
+    const n = parseInt(
+      normalizeName(active.innerText || active.textContent || ''),
+      10
+    );
+
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  // 找分页器里可点击的指定页码按钮（排除当前高亮与禁用项）
+  function findPageNumberButton(pageNo) {
+    const pager = document.querySelector('.el-pagination .el-pager') ||
+      document.querySelector('.el-pager');
+    if (!pager) return null;
+
+    const items = [...pager.querySelectorAll('li, button')];
+
+    return items.find(el => {
+      const text = normalizeName(el.innerText || el.textContent || '');
+      if (text !== String(pageNo)) return false;
+
+      const active =
+        el.classList.contains('is-active') ||
+        el.classList.contains('is-current') ||
+        el.getAttribute('aria-current') === 'page';
+      const disabled =
+        el.classList.contains('disabled') ||
+        el.getAttribute('aria-disabled') === 'true' ||
+        el.hasAttribute('disabled');
+
+      return !active && !disabled;
+    }) || null;
+  }
+
+  // 点击某个翻页控件并等待列表内容变化（复用课程名签名对比，4 秒超时
+  // 照常回调，由下一步逻辑决定去留）
+  function clickAndWaitListChange(el, message, callback) {
+    const before = getCourseList().map(item => item.name).join('|');
+    if (message) setMessage(message);
+
+    try { el.click(); } catch (_) { callback(); return; }
+
+    let attempts = 0;
+
+    const timer = setInterval(() => {
+      attempts++;
+
+      const after = getCourseList().map(item => item.name).join('|');
+
+      if (after && after !== before) {
+        clearInterval(timer);
+        setTimeout(callback, 400);  // 留一点渲染缓冲
+      } else if (attempts >= 8) {
+        clearInterval(timer);
+        callback();
+      }
+    }, 500);
+  }
+
+  // 回到 state.pageNumber 记录的目标页：优先直接点页码（1 次到位），
+  // 分页器没渲染目标页码时连续点"下一页"快进。全程不构建队列。
+  function restoreTargetPage(done) {
+    const target = Math.max(1, parseInt(state.pageNumber, 10) || 1);
+    if (target <= 1) { done(); return; }
+
+    let steps = 0;
+    const maxSteps = target + 3;
+
+    function finish() {
+      const landed = readCurrentPageFromDom();
+      if (landed) {
+        state.pageNumber = landed;
+        saveState();
+      }
+      done();
+    }
+
+    function step() {
+      if (!isRunning()) { done(); return; }
+
+      const current = readCurrentPageFromDom();
+      if (current >= target || steps >= maxSteps) { finish(); return; }
+
+      const direct = findPageNumberButton(target);
+
+      if (direct) {
+        steps++;
+        clickAndWaitListChange(
+          direct,
+          `恢复到第 ${target} 页（当前第 ${current || '未知'} 页）`,
+          step
+        );
+        return;
+      }
+
+      const next = findNextPageButton();
+      if (!next) { finish(); return; }
+
+      steps++;
+      clickAndWaitListChange(next, null, step);
+    }
+
+    step();
   }
 
   // =========================================================
@@ -3578,6 +3732,13 @@
       return;
     }
 
+    // v1.7.28：开始学习时以当前显示页为准（人工翻到某页再开始即从该页起）
+    const startPage = readCurrentPageFromDom();
+    if (startPage && startPage !== state.pageNumber) {
+      state.pageNumber = startPage;
+      saveState();
+    }
+
     if (!buildQueue()) {
       pauseAuto(lastMessage || '课程列表尚未准备好');
       return;
@@ -3713,6 +3874,28 @@
 
         clearInterval(readyTimer);
         if (!isRunning()) return;
+
+        // v1.7.28：刷新后分页重置回第 1 页，先恢复到学完课程所在的目标
+        // 页再继续（开课本身按 ID 与页无关，恢复是为了面板显示正确、且
+        // 队列耗尽时直接从目标页续走，不必从第 1 页逐页重走）。
+        const resumeTargetPage =
+          Math.max(1, parseInt(state.pageNumber, 10) || 1);
+        const resumeDomPage = readCurrentPageFromDom();
+
+        if (resumeTargetPage > 1 && (!resumeDomPage || resumeDomPage < resumeTargetPage)) {
+          setMessage(`列表已刷新，恢复到第 ${resumeTargetPage} 页继续`);
+
+          restoreTargetPage(() => {
+            if (!isRunning()) return;
+            setMessage(
+              ready
+                ? '课程状态数据已就绪，正在打开下一门课程'
+                : '等待课程状态数据超时，尝试打开下一门课程'
+            );
+            openNextCourse();
+          });
+          return;
+        }
 
         setMessage(
           ready

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         铁塔 e 学自动学习助手
 // @namespace    tower-study-helper
-// @version      1.7.15
-// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课
+// @version      1.7.19
+// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课；v1.7.18 新增课程列表页会话保活：默认开启、10分钟一次（5-60分钟可调），用 Web Worker 定时器（不受后台标签降频影响）周期性向平台发轻量同源请求维持登录会话，防止挂机一段时间后被平台登出导致无法继续学习；心跳全程纯后台不改标题不碰焦点不影响用户其他工作，仅当检测到登录态失效时告警（标签标题红字+页面红色横幅+尽力弹前台）；v1.7.19 增强自动翻页可靠性：翻页后课程 ID 识别由单次等待改为每 2 秒重试（最长 30 秒）不再立即暂停，翻页点击 25 秒后列表无变化时自动重试一次翻页，慢网络下多页自动学习不再中断
 // @match        https://elearning.chinatowercom.cn/*
 // @run-at       document-start
 // @grant        none
@@ -11,10 +11,10 @@
 (() => {
   'use strict';
 
-  if (window.__towerStudyHelper184) return;
-  window.__towerStudyHelper184 = true;
+  if (window.__towerStudyHelper188) return;
+  window.__towerStudyHelper188 = true;
 
-  const VERSION = '1.7.15';
+  const VERSION = '1.7.19';
 
   const STORE_KEY = 'towerStudyHelperCourseIdsV1';
   const STATE_KEY = 'towerStudyHelperAutoStateV152';
@@ -91,6 +91,15 @@
 
   let detailTimer = null;
   let listTimer = null;
+  // v1.7.18：会话保活（仅课程列表页）。Worker 定时器不受后台标签降频影响，
+  // 页面定时器作为 Worker 创建失败时的降级方案。
+  let keepAliveWorker = null;
+  let keepAliveFallbackTimer = null;
+  let keepAliveLastBeatAt = 0;
+  let sessionLostAlerted = false;
+  let titleBeforeSessionAlert = '';
+  // 最近一次捕获到的课程列表接口 URL，保活心跳优先重放它（最轻量的真实业务请求）
+  let lastCourseListApiUrl = '';
   let completionWaitTimer = null;
   let completionWaitId = '';
   // v1.7.15：完结等待的起点时间戳（模块级）。轮询链断裂后 monitorDetail 会
@@ -141,6 +150,12 @@
     const text = String(url || '');
     if (!/api/i.test(text)) return;
     lastApiLog = [text, ...lastApiLog].slice(0, 12);
+
+    // v1.7.18：记录最近一次课程列表接口，供会话保活心跳重放
+    //（GET 重放同一列表接口是最轻量、最真实的保活请求）。
+    if (/\/api\//i.test(text) && isCourseListApi(text)) {
+      lastCourseListApiUrl = text;
+    }
   }
 
   function readStore() {
@@ -783,7 +798,9 @@
       resumeOpenNext: false,
       speedEnabled: false,
       playbackRate: 1.25,
-      titleDebug: false
+      titleDebug: false,
+      keepAlive: true,
+      keepAliveMinutes: 10
     };
 
     try {
@@ -2463,12 +2480,12 @@
     pauseAuto('当前页未完成课程队列已处理完，未找到可用的下一页');
   }
 
-  function tryNextPage() {
+  function findNextPageButton() {
     const buttons = [...document.querySelectorAll(
       'button, a, .el-pagination button, .el-pagination li'
     )];
 
-    const next = buttons.find(el => {
+    return buttons.find(el => {
       const text = normalizeName(el.innerText || el.textContent || '');
       const aria = normalizeName(el.getAttribute('aria-label') || '');
       const title = normalizeName(el.getAttribute('title') || '');
@@ -2486,6 +2503,50 @@
 
       return matches && !disabled;
     });
+  }
+
+  // v1.7.19：翻页成功后的队列重建。新页课程 ID 来自翻页后的接口返回，
+  // 慢网络下原来的单次 1.8 秒等待可能识别不全，导致 buildQueue 失败并
+  // 直接暂停自动化（用户需手动点"开始学习"）。现改为每 2 秒重试
+  // buildQueue，最多等 30 秒，全部识别成功后再继续。
+  function rebuildQueueAfterFlip() {
+    const startedAt = Date.now();
+
+    function attempt() {
+      if (!isRunning()) return;
+
+      if (buildQueue()) {
+        state.pageNumber++;
+        saveState();
+
+        if (state.queue.length) {
+          openNextCourse();
+        } else {
+          setMessage('当前页没有需要学习的课程，继续寻找下一页');
+
+          if (!tryNextPage()) {
+            pauseAuto('后续页面没有可继续学习的课程');
+          }
+        }
+        return;
+      }
+
+      if (Date.now() - startedAt >= 30000) {
+        pauseAuto(
+          '新页面课程 ID 识别超时（30 秒），请稍后点击"开始学习"继续'
+        );
+        return;
+      }
+
+      setMessage('新页面课程 ID 仍在识别中，等待接口返回…');
+      setTimeout(attempt, 2000);
+    }
+
+    setTimeout(attempt, 1800);
+  }
+
+  function tryNextPage(isRetry) {
+    const next = findNextPageButton();
 
     if (!next) return false;
 
@@ -2507,30 +2568,17 @@
 
       if (after && after !== before) {
         clearInterval(timer);
-
-        setTimeout(() => {
-          if (!isRunning()) return;
-
-          if (!buildQueue()) {
-            pauseAuto('新页面课程 ID 尚未识别完成，请稍后刷新识别');
-            return;
-          }
-
-          state.pageNumber++;
-          saveState();
-
-          if (state.queue.length) {
-            openNextCourse();
-          } else {
-            setMessage('当前页没有需要学习的课程，继续寻找下一页');
-
-            if (!tryNextPage()) {
-              pauseAuto('后续页面没有可继续学习的课程');
-            }
-          }
-        }, 1800);
-      } else if (attempts >= 20) {
+        rebuildQueueAfterFlip();
+      } else if (attempts >= 50) {
+        // v1.7.19：25 秒列表仍无变化时，重试一次翻页点击（再给 25 秒），
+        // 仍失败才暂停——网络慢时不再一次点击未生效就中断自动化。
         clearInterval(timer);
+
+        if (!isRetry) {
+          setMessage('翻页后列表暂无变化，重试一次翻页点击');
+          if (tryNextPage(true)) return;
+        }
+
         pauseAuto('翻页后课程列表没有变化，请检查分页');
       }
     }, 500);
@@ -2736,6 +2784,210 @@
     if (ui.minimized) panel.classList.add('tsh-minimized');
   }
 
+  // =========================================================
+  // v1.7.18：课程列表页会话保活
+  // =========================================================
+  // 背景：平台会话疑似为滑动过期——一段时间无请求即登出；两个标签
+  // （列表/播放）共享同一 Cookie 会话，因此只需列表页单独保活即可。
+  // 播放页在播放时平台天然有秒级进度上报，无需任何处理。
+  //
+  // 实现要点：
+  // 1. Web Worker 定时器：隐藏标签页的 Worker 不受浏览器后台降频
+  //    （普通 setInterval 后台最坏被压到约 1 小时一次），保证间隔严格兑现；
+  //    Worker 创建失败时降级为页面定时器。
+  // 2. 心跳 = 一次同源轻量 GET（优先重放最近的课程列表接口，未捕获时
+  //    退回当前页面地址），纯后台网络活动：不改标题、不碰焦点，
+  //    完全不影响用户在其他标签页的工作。
+  // 3. 每次心跳顺带检测登录态（401/403、被重定向到登录页、响应体
+  //    提示未登录），仅在确认失效时才告警：标签标题红字（后台可见）+
+  //    页面顶部红色横幅 + 尽力 window.focus() 弹前台（浏览器可能忽略）。
+  const KEEPALIVE_ALERT_TITLE = '⚠️登录已失效 | 铁塔e学';
+  const KEEPALIVE_MIN_MINUTES = 5;
+  const KEEPALIVE_MAX_MINUTES = 60;
+  const KEEPALIVE_UNAUTH_PATTERN =
+    /未登录|请(?:先)?登录|登录已过期|登录状态|"code"\s*:\s*(?:401|403)/;
+
+  function keepAliveEnabled() {
+    return state.keepAlive !== false;
+  }
+
+  function getKeepAliveMinutes() {
+    let minutes = parseInt(state.keepAliveMinutes, 10);
+    if (!Number.isFinite(minutes)) minutes = 10;
+    return Math.min(
+      KEEPALIVE_MAX_MINUTES,
+      Math.max(KEEPALIVE_MIN_MINUTES, minutes)
+    );
+  }
+
+  function createKeepAliveWorker() {
+    try {
+      const code = [
+        'let timer = null;',
+        'onmessage = function (e) {',
+        '  if (timer) clearInterval(timer);',
+        '  timer = null;',
+        '  const ms = e && e.data && e.data.intervalMs;',
+        '  if (ms > 0) {',
+        '    timer = setInterval(function () { postMessage(Date.now()); }, ms);',
+        '  }',
+        '};'
+      ].join('\n');
+
+      const url = URL.createObjectURL(
+        new Blob([code], { type: 'text/javascript' })
+      );
+      const worker = new Worker(url);
+      URL.revokeObjectURL(url);
+
+      worker.onmessage = function () { runKeepAliveBeat(); };
+      return worker;
+    } catch (error) {
+      console.warn('[铁塔助手] 保活 Worker 创建失败，降级为页面定时器', error);
+      return null;
+    }
+  }
+
+  // 应用当前保活设置（开关/间隔变化时调用）
+  function applyKeepAliveInterval() {
+    const ms = getKeepAliveMinutes() * 60 * 1000;
+
+    if (keepAliveWorker) {
+      keepAliveWorker.postMessage({
+        intervalMs: keepAliveEnabled() ? ms : 0
+      });
+      return;
+    }
+
+    // 降级路径：页面定时器（后台可能被浏览器降频）
+    if (keepAliveFallbackTimer) {
+      clearInterval(keepAliveFallbackTimer);
+      keepAliveFallbackTimer = null;
+    }
+    if (keepAliveEnabled()) {
+      keepAliveFallbackTimer = setInterval(runKeepAliveBeat, ms);
+    }
+  }
+
+  function startKeepAlive() {
+    if (!keepAliveWorker && !keepAliveFallbackTimer) {
+      keepAliveWorker = createKeepAliveWorker();
+    }
+    applyKeepAliveInterval();
+  }
+
+  function runKeepAliveBeat() {
+    // 播放页不需要保活（播放时平台天然有活动请求），心跳只在列表页执行
+    if (isDetailPage()) return;
+    if (!keepAliveEnabled()) return;
+
+    keepAliveLastBeatAt = Date.now();
+
+    // 优先重放最近捕获的课程列表接口；尚未捕获时退回当前页面地址
+    //（SPA 文档请求同样能焐热会话）。
+    const url = lastCourseListApiUrl || location.href;
+
+    originalFetch.call(window, url, {
+      credentials: 'include',
+      cache: 'no-store'
+    }).then(response => {
+      const kicked =
+        response.status === 401 ||
+        response.status === 403 ||
+        (response.redirected && /login|signin|sso/i.test(response.url)) ||
+        /login|signin|sso/i.test(response.url);
+
+      if (kicked) {
+        alertSessionLost();
+        return;
+      }
+
+      // 部分平台以 200 + JSON 业务码表示未登录，做一次轻量响应体嗅探
+      //（仅在 content-type 为 json/text 时读取，避免拖慢大响应）。
+      const type = response.headers.get('content-type') || '';
+      if (/json|text/i.test(type)) {
+        response.clone().text().then(text => {
+          if (KEEPALIVE_UNAUTH_PATTERN.test(text)) {
+            alertSessionLost();
+          } else if (sessionLostAlerted) {
+            clearSessionLostAlert();
+          }
+        }).catch(() => {});
+      } else if (sessionLostAlerted) {
+        clearSessionLostAlert();
+      }
+    }).catch(() => {
+      // 网络瞬断/离线不告警，避免误报打扰；下个周期再试
+    });
+  }
+
+  function showSessionLostBanner() {
+    try {
+      if (document.getElementById('tsh-session-lost')) return;
+      const banner = document.createElement('div');
+      banner.id = 'tsh-session-lost';
+      banner.textContent =
+        '⚠️ 登录态已失效（保活心跳检测到被平台登出），自动学习已无法继续；' +
+        '请重新登录后点击面板"刷新识别"。';
+      banner.setAttribute(
+        'style',
+        'position:fixed;top:0;left:0;right:0;z-index:2147483647;' +
+        'padding:10px 16px;background:#c0392b;color:#fff;font-size:14px;' +
+        'font-weight:bold;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.3);'
+      );
+      document.body.appendChild(banner);
+    } catch (_) {}
+  }
+
+  function hideSessionLostBanner() {
+    try {
+      const banner = document.getElementById('tsh-session-lost');
+      if (banner) banner.remove();
+    } catch (_) {}
+  }
+
+  function alertSessionLost() {
+    if (sessionLostAlerted) return;
+    sessionLostAlerted = true;
+
+    console.warn('[铁塔助手] 保活心跳检测到登录态失效');
+    setMessage('登录态已失效：保活心跳检测到被平台登出，请重新登录');
+
+    // 标题红字告警（后台标签的标题在标签栏可见，是用户最可靠的感知点）
+    try {
+      titleBeforeSessionAlert = document.title;
+      document.title = KEEPALIVE_ALERT_TITLE;
+    } catch (_) {}
+
+    showSessionLostBanner();
+
+    // 尽力弹前台：浏览器大概率忽略后台标签的 focus 调用，成功算赚到
+    try { window.focus(); } catch (_) {}
+  }
+
+  function clearSessionLostAlert() {
+    if (!sessionLostAlerted) return;
+    sessionLostAlerted = false;
+
+    try {
+      if (document.title === KEEPALIVE_ALERT_TITLE) {
+        document.title = titleBeforeSessionAlert || stripTshTitleSuffix(
+          document.title
+        ).trim() || '铁塔e学';
+      }
+    } catch (_) {}
+
+    hideSessionLostBanner();
+    setMessage('登录态已恢复（保活心跳检测正常）');
+  }
+
+  // 标签切回前台时立即补发一次心跳（限制最小间隔 60 秒，避免频繁切换刷请求）
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    if (!keepAliveEnabled() || isDetailPage()) return;
+    if (Date.now() - keepAliveLastBeatAt > 60000) runKeepAliveBeat();
+  });
+
   function createPanel() {
     if (!document.body || document.getElementById(PANEL_ID)) return;
 
@@ -2775,6 +3027,18 @@
           <label for="tsh-title-debug" title="开启后标签页标题会显示播放状态（倍速/进度/章节），便于远程监控；默认关闭，此时标签名与未安装插件时完全一致">
             <input type="checkbox" id="tsh-title-debug"> 标题调试
           </label>
+        </div>
+        <div class="tsh-speed">
+          <label for="tsh-keepalive" title="列表页定期向平台发轻量请求保持登录会话，防止挂机久了被登出；全程后台运行不改标题不碰焦点，仅检测到被登出时告警">
+            <input type="checkbox" id="tsh-keepalive"> 会话保活
+          </label>
+          <select id="tsh-keepalive-interval" title="保活心跳间隔">
+            <option value="5">5分钟</option>
+            <option value="10">10分钟</option>
+            <option value="15">15分钟</option>
+            <option value="30">30分钟</option>
+            <option value="60">60分钟</option>
+          </select>
         </div>
         <div class="tsh-small" id="tsh-count"></div>
         <div id="tsh-courses"></div>
@@ -2869,6 +3133,39 @@
       });
     }
 
+    const keepAliveEnable = panel.querySelector('#tsh-keepalive');
+    const keepAliveIntervalSel =
+      panel.querySelector('#tsh-keepalive-interval');
+
+    if (keepAliveEnable) {
+      keepAliveEnable.addEventListener('change', () => {
+        state.keepAlive = keepAliveEnable.checked;
+        saveState();
+        applyKeepAliveInterval();
+        if (state.keepAlive) {
+          // 立即焐一下，同时完成一次登录态检测
+          runKeepAliveBeat();
+          setMessage(
+            `已开启会话保活：每 ${getKeepAliveMinutes()} 分钟一次，仅列表页后台运行`
+          );
+        } else {
+          setMessage('已关闭会话保活');
+        }
+        refreshPanel();
+      });
+    }
+
+    if (keepAliveIntervalSel) {
+      keepAliveIntervalSel.addEventListener('change', () => {
+        state.keepAliveMinutes =
+          parseInt(keepAliveIntervalSel.value, 10) || 10;
+        saveState();
+        applyKeepAliveInterval();
+        setMessage(`会话保活间隔已改为 ${getKeepAliveMinutes()} 分钟`);
+        refreshPanel();
+      });
+    }
+
     if (window.ResizeObserver) {
       let resizeSaveTimer = null;
 
@@ -2893,12 +3190,19 @@
     const speedEnable = panel.querySelector('#tsh-speed-enable');
     const speedRate = panel.querySelector('#tsh-speed-rate');
     const titleDebug = panel.querySelector('#tsh-title-debug');
+    const keepAliveEnable = panel.querySelector('#tsh-keepalive');
+    const keepAliveIntervalSel =
+      panel.querySelector('#tsh-keepalive-interval');
 
     if (!status || !route || !count || !list) return;
 
     if (speedEnable) speedEnable.checked = Boolean(state.speedEnabled);
     if (speedRate) speedRate.value = String(state.playbackRate || 1);
     if (titleDebug) titleDebug.checked = Boolean(state.titleDebug);
+    if (keepAliveEnable) keepAliveEnable.checked = keepAliveEnabled();
+    if (keepAliveIntervalSel) {
+      keepAliveIntervalSel.value = String(getKeepAliveMinutes());
+    }
 
     status.textContent =
       `${isRunning() ? '运行中' : '已暂停'}：` +
@@ -3126,6 +3430,9 @@
     });
 
     handleRouteChange();
+
+    // v1.7.18：会话保活（Worker 定时器，默认开启，仅列表页生效）
+    startKeepAlive();
 
     if (isRunning()) resumeTimers();
 

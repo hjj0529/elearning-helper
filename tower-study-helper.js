@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         铁塔 e 学自动学习助手
 // @namespace    tower-study-helper
-// @version      1.7.19
-// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课；v1.7.18 新增课程列表页会话保活：默认开启、10分钟一次（5-60分钟可调），用 Web Worker 定时器（不受后台标签降频影响）周期性向平台发轻量同源请求维持登录会话，防止挂机一段时间后被平台登出导致无法继续学习；心跳全程纯后台不改标题不碰焦点不影响用户其他工作，仅当检测到登录态失效时告警（标签标题红字+页面红色横幅+尽力弹前台）；v1.7.19 增强自动翻页可靠性：翻页后课程 ID 识别由单次等待改为每 2 秒重试（最长 30 秒）不再立即暂停，翻页点击 25 秒后列表无变化时自动重试一次翻页，慢网络下多页自动学习不再中断
+// @version      1.7.22
+// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课；v1.7.18 新增课程列表页会话保活：默认开启、10分钟一次（5-60分钟可调），用 Web Worker 定时器（不受后台标签降频影响）周期性向平台发轻量同源请求维持登录会话，防止挂机一段时间后被平台登出导致无法继续学习；心跳全程纯后台不改标题不碰焦点不影响用户其他工作，仅当检测到登录态失效时告警（标签标题红字+页面红色横幅+尽力弹前台）；v1.7.19 增强自动翻页可靠性：翻页后课程 ID 识别由单次等待改为每 2 秒重试（最长 30 秒）不再立即暂停，翻页点击 25 秒后列表无变化时自动重试一次翻页，慢网络下多页自动学习不再中断；v1.7.20 会话保活改为纯保活模式：移除登录态检测与告警（启发式判定在登录状态良好时误报"登录已失效"横幅，平台真实登出表现为整页跳转 OA 登录页无需插件判定），只保留周期心跳维持会话；v1.7.21 移除面板"标题调试"功能（含播放页写标题心跳等整套逻辑，该功能已无实际作用），标签名恒与平台一致；v1.7.22 修复"视频已在自动播放但面板停留提示'已点击播放按钮，等待播放器响应'"：进场时序留下的等待类陈旧消息在检测到视频确实播放后自动纠正为"正在播放：第N节"
 // @match        https://elearning.chinatowercom.cn/*
 // @run-at       document-start
 // @grant        none
@@ -11,10 +11,10 @@
 (() => {
   'use strict';
 
-  if (window.__towerStudyHelper188) return;
-  window.__towerStudyHelper188 = true;
+  if (window.__towerStudyHelper191) return;
+  window.__towerStudyHelper191 = true;
 
-  const VERSION = '1.7.19';
+  const VERSION = '1.7.22';
 
   const STORE_KEY = 'towerStudyHelperCourseIdsV1';
   const STATE_KEY = 'towerStudyHelperAutoStateV152';
@@ -96,8 +96,6 @@
   let keepAliveWorker = null;
   let keepAliveFallbackTimer = null;
   let keepAliveLastBeatAt = 0;
-  let sessionLostAlerted = false;
-  let titleBeforeSessionAlert = '';
   // 最近一次捕获到的课程列表接口 URL，保活心跳优先重放它（最轻量的真实业务请求）
   let lastCourseListApiUrl = '';
   let completionWaitTimer = null;
@@ -412,25 +410,7 @@
 
       localStorage.setItem('towerStudyHelperApiDebug', dbgText);
 
-      // 标题调试：把课程清单与 ID 字段摘要写入标签页标题（非面板），便于外部监控。
-      // v1.7.13：详情页不写标题。播放页会高频命中 course-front 进度上报接口，
-      // 每次回调都改写标题会让标签页标题每秒级变化，外部工具无法 claim/截图，
-      // 弹窗与 bug 现场都抓不到。详情页标题由播放心跳（updateDebugHeartbeat）独占。
-      if (!isDetailPage()) {
-        try {
-          const names = (sample || []).slice(0, 6).map(s => ({
-            n: s.name,
-            id: s.idLike && s.idLike.id
-          }));
-          const patch = {
-            api: String(url || '').split('?')[0],
-            count: (sample || []).length,
-            sample: names
-          };
-          patch.page = 'list';
-          setDebugTitle(patch);
-        } catch (_) {}
-      }
+      // v1.7.21：原"标题调试"写标题逻辑已移除，标签名恒与平台一致。
 
       // 额外把调试数据写到一个屏幕外、不可见的 span（不影响面板 UI），
       // 便于外部通过 DOM 读取接口路径与课程 ID 字段格式。
@@ -455,91 +435,10 @@
   }
 
   // ---------------------------------------------------------
-  // 轻量标题调试（默认关闭，不影响面板 UI 与标签名）
-  // v1.7.14：默认完全不写 document.title——标签名与未安装插件时一致；
-  // 仅当用户在面板勾选"标题调试"后，才把播放状态以可读格式写入标题，
-  // 供外部监控（此前是原始 JSON，用户反馈像乱码，已改为紧凑格式）。
-  // 格式示例（开启后）：
-  //   列表页：铁塔e学 ｜ 列表
-  //   播放页：铁塔e学 ｜ 1.25x · 741/2009 · 第1节 · 运行中 · 等待平台更新
-  //   倍速不符：铁塔e学 ｜ 1.0→1.25x · 741/2009 · 第1节 · 运行中
+  // v1.7.21：原"标题调试"功能（setDebugTitle/buildDebugTitle/restorePlatformTitle/
+  // 播放页写标题心跳等）已整体移除——该功能目前没有实际作用，且标签名恒定
+  // 与平台一致即可。
   // ---------------------------------------------------------
-  let __tshDebug = {};
-  // 我们生成的状态串总是以 倍速数值/常速/列表 开头，据此安全剥离旧后缀，
-  // 不会误伤平台原标题（即使原标题含"｜"）。
-  const TSH_TITLE_TAIL_RE =
-    /\s*｜\s*(?:(?:\d+(?:\.\d+)?(?:→\d+(?:\.\d+)?)?x|常速|列表)\b[\s\S]*)$/;
-
-  function stripTshTitleSuffix(title) {
-    return String(title || '').replace(TSH_TITLE_TAIL_RE, '');
-  }
-
-  function truncateText(value, max) {
-    const text = String(value || '');
-    return text.length > max ? text.slice(0, max) + '…' : text;
-  }
-
-  // 章节名原文形如"第1节 《…》学习解读（上）视频|33分28秒"，标题里只保留"第N节"。
-  function shortChapterName(chapter) {
-    const text = String(chapter || '');
-    const matched = text.match(/^(第[^，,|]{0,12}?节)/);
-    if (matched) return matched[1];
-    return truncateText(text.split('|')[0], 12);
-  }
-
-  function buildDebugTitle() {
-    const debug = __tshDebug;
-    const parts = [];
-
-    if (debug.page === 'detail') {
-      if (debug.rateOn) {
-        const rate = Number(debug.rate);
-        const target = Number(debug.rateTarget);
-        if (
-          Number.isFinite(rate) && Number.isFinite(target) &&
-          Math.abs(rate - target) > 0.05
-        ) {
-          parts.push(`${rate}→${target}x`);
-        } else {
-          parts.push(`${Number.isFinite(rate) ? rate : 1}x`);
-        }
-      } else {
-        parts.push('常速');
-      }
-
-      if (typeof debug.t === 'number' && debug.d) {
-        parts.push(`${debug.t}/${debug.d}`);
-      }
-      if (debug.chapter) parts.push(shortChapterName(debug.chapter));
-      if (debug.rateReset) parts.push(`重置${debug.rateReset}`);
-      parts.push(debug.running ? '运行中' : '已暂停');
-      if (debug.status) parts.push(truncateText(debug.status, 14));
-    } else if (debug.page === 'list') {
-      parts.push('列表');
-    }
-
-    const base = stripTshTitleSuffix(document.title).trim() || '铁塔e学';
-    return parts.length ? `${base} ｜ ${parts.join(' · ')}` : base;
-  }
-
-  // 标题调试开关（面板"标题调试"复选框，默认关）：
-  // 关闭时完全不碰 document.title，标签名与无插件时一致；
-  // 仅在用户勾选后才把可读的播放状态写入标题，供外部监控。
-  function setDebugTitle(patch) {
-    try {
-      if (!state.titleDebug) return;
-      __tshDebug = { ...__tshDebug, ...patch, ts: Date.now() };
-      document.title = buildDebugTitle();
-    } catch (_) {}
-  }
-
-  // 关闭标题调试时，立即把标签名还原为平台原标题（剥掉我们追加的状态后缀）。
-  function restorePlatformTitle() {
-    try {
-      const restored = stripTshTitleSuffix(document.title).trim();
-      if (restored) document.title = restored;
-    } catch (_) {}
-  }
 
   // 倍速守卫：观测并抵消平台的倍速重置（"系统验证机制"）。
   // 当 playbackRate 被改回目标倍速之外时，自动恢复目标倍速并计数；
@@ -557,11 +456,6 @@
 
       if (Math.abs(video.playbackRate - target) > 0.05) {
         video.__tshRateResets = (video.__tshRateResets || 0) + 1;
-        setDebugTitle({
-          rateReset: video.__tshRateResets,
-          rateNow: video.playbackRate,
-          rateTarget: target
-        });
         if (video.__tshRateResets <= 60) {
           try { video.playbackRate = target; } catch (_) {}
         } else if (video.__tshRateResets === 61) {
@@ -569,49 +463,6 @@
         }
       }
     });
-  }
-
-  // 播放页实时心跳：把播放进度/倍速/状态写入标题，供外部监控。
-  // 节流：默认 15s 才刷新一次标题；但倍速/章节/运行态/状态消息等关键字段变化时立即刷新。
-  // v1.7.13：配合"详情页不再由接口日志写标题"，播放中标题最长 15s 才变一次，
-  // 外部工具才能可靠 claim/截图该标签页（倍速切换本身会触发即时刷新，便于观测）。
-  let __tshHeartbeatLast = 0;
-  let __tshHeartbeatKey = '';
-  function updateDebugHeartbeat(video) {
-    if (!video) return;
-    try {
-      const active = getActiveChapter();
-      const id = getCurrentRouteId();
-      const chapter = getChapterName(active);
-      const t = Math.round(video.currentTime || 0);
-      const d = Math.round(video.duration || 0);
-      const rate = video.playbackRate;
-      const rateReset = video.__tshRateResets || 0;
-      const running = isRunning();
-      const status = lastMessage || state.message;
-
-      // 关键字段（倍速相关/章节/运行态/状态消息）任一变化则立即刷新
-      const key = `${id}|${chapter}|${rate}|${rateReset}|${running}|${status}`;
-      const now = Date.now();
-      const force = key !== __tshHeartbeatKey;
-      if (!force && now - __tshHeartbeatLast < 15000) return;
-      __tshHeartbeatLast = now;
-      __tshHeartbeatKey = key;
-
-      setDebugTitle({
-        page: 'detail',
-        id,
-        chapter,
-        t,
-        d,
-        rate,
-        rateOn: state.speedEnabled,
-        rateTarget: state.playbackRate,
-        rateReset,
-        running,
-        status
-      });
-    } catch (_) {}
   }
 
   const originalFetch = window.fetch;
@@ -798,7 +649,6 @@
       resumeOpenNext: false,
       speedEnabled: false,
       playbackRate: 1.25,
-      titleDebug: false,
       keepAlive: true,
       keepAliveMinutes: 10
     };
@@ -1357,6 +1207,25 @@
     });
   }
 
+  // v1.7.22：播放状态消息自愈。进场时序里 ensurePlayback 可能在播放器
+  // 就绪前就留下"等待播放器响应/未发现播放器"等消息，而此后"已在播放"
+  // 的早退分支与监控循环的播放分支都不更新消息——视频明明正常在播，
+  // 面板却永远停在等待提示（用户报告：学习中的课程自动播放后，插件一直
+  // 提示"已点击播放按钮，等待播放器响应"，像读不到播放数据）。
+  // 修法：确认在播时，若当前消息属于等待/失败类陈旧文案，纠正为
+  // "正在播放：第N节"；只在文案陈旧时纠正一次，不逐 tick 刷屏。
+  const STALE_PLAYBACK_MESSAGE_RE =
+    /等待播放器响应|未发现可控制的播放器|自动播放未成功|自动播放遇到异常/;
+
+  function correctPlaybackMessageIfStale() {
+    const current = lastMessage || state.message || '';
+    if (!STALE_PLAYBACK_MESSAGE_RE.test(current)) return;
+
+    const active = getActiveChapter();
+    const chapter = active ? getChapterName(active) : '';
+    setMessage(chapter ? `正在播放：${chapter}` : '视频正在播放');
+  }
+
   async function ensurePlayback() {
     if (!isRunning() || isExamPage() || playbackStarting) return;
 
@@ -1374,6 +1243,7 @@
     if (video && videoIsPlaying(video)) {
       removePlayOverlayWhenPlaying();
       applyPlaybackRate();
+      correctPlaybackMessageIfStale();
       return;
     }
 
@@ -2139,7 +2009,7 @@
     if (playingVideo && videoIsPlaying(playingVideo)) {
       removePlayOverlayWhenPlaying();
       applyPlaybackRate();
-      updateDebugHeartbeat(playingVideo);
+      correctPlaybackMessageIfStale();
     }
 
     if (manualControlActive()) {
@@ -2785,7 +2655,7 @@
   }
 
   // =========================================================
-  // v1.7.18：课程列表页会话保活
+  // v1.7.18：课程列表页会话保活（v1.7.20 起只保活、不做登录态检测）
   // =========================================================
   // 背景：平台会话疑似为滑动过期——一段时间无请求即登出；两个标签
   // （列表/播放）共享同一 Cookie 会话，因此只需列表页单独保活即可。
@@ -2798,14 +2668,13 @@
   // 2. 心跳 = 一次同源轻量 GET（优先重放最近的课程列表接口，未捕获时
   //    退回当前页面地址），纯后台网络活动：不改标题、不碰焦点，
   //    完全不影响用户在其他标签页的工作。
-  // 3. 每次心跳顺带检测登录态（401/403、被重定向到登录页、响应体
-  //    提示未登录），仅在确认失效时才告警：标签标题红字（后台可见）+
-  //    页面顶部红色横幅 + 尽力 window.focus() 弹前台（浏览器可能忽略）。
-  const KEEPALIVE_ALERT_TITLE = '⚠️登录已失效 | 铁塔e学';
+  // 3. v1.7.20：移除登录态检测与告警。原实现用 401/403 状态码、重定向
+  //    URL 关键字、响应体文案三类启发式判定是否被登出，实际会误报
+  //    （登录状态良好也弹"登录已失效"横幅）——平台真实登出表现为整页
+  //    跳转 OA 登录页（URL 变化），页面自己会给出信号，无需靠猜响应。
+  //    故降级为纯保活：只发心跳维持会话，不做任何登出判定。
   const KEEPALIVE_MIN_MINUTES = 5;
   const KEEPALIVE_MAX_MINUTES = 60;
-  const KEEPALIVE_UNAUTH_PATTERN =
-    /未登录|请(?:先)?登录|登录已过期|登录状态|"code"\s*:\s*(?:401|403)/;
 
   function keepAliveEnabled() {
     return state.keepAlive !== false;
@@ -2887,98 +2756,14 @@
     //（SPA 文档请求同样能焐热会话）。
     const url = lastCourseListApiUrl || location.href;
 
+    // v1.7.20：纯保活，只发请求焐热会话，不解析响应、不做登录态判定
+    //（此前的状态码/重定向/响应体启发式检测会误报，已按用户决定移除）。
     originalFetch.call(window, url, {
       credentials: 'include',
       cache: 'no-store'
-    }).then(response => {
-      const kicked =
-        response.status === 401 ||
-        response.status === 403 ||
-        (response.redirected && /login|signin|sso/i.test(response.url)) ||
-        /login|signin|sso/i.test(response.url);
-
-      if (kicked) {
-        alertSessionLost();
-        return;
-      }
-
-      // 部分平台以 200 + JSON 业务码表示未登录，做一次轻量响应体嗅探
-      //（仅在 content-type 为 json/text 时读取，避免拖慢大响应）。
-      const type = response.headers.get('content-type') || '';
-      if (/json|text/i.test(type)) {
-        response.clone().text().then(text => {
-          if (KEEPALIVE_UNAUTH_PATTERN.test(text)) {
-            alertSessionLost();
-          } else if (sessionLostAlerted) {
-            clearSessionLostAlert();
-          }
-        }).catch(() => {});
-      } else if (sessionLostAlerted) {
-        clearSessionLostAlert();
-      }
-    }).catch(() => {
-      // 网络瞬断/离线不告警，避免误报打扰；下个周期再试
+    }).then(() => {}).catch(() => {
+      // 网络瞬断/离线静默忽略，下个周期再试
     });
-  }
-
-  function showSessionLostBanner() {
-    try {
-      if (document.getElementById('tsh-session-lost')) return;
-      const banner = document.createElement('div');
-      banner.id = 'tsh-session-lost';
-      banner.textContent =
-        '⚠️ 登录态已失效（保活心跳检测到被平台登出），自动学习已无法继续；' +
-        '请重新登录后点击面板"刷新识别"。';
-      banner.setAttribute(
-        'style',
-        'position:fixed;top:0;left:0;right:0;z-index:2147483647;' +
-        'padding:10px 16px;background:#c0392b;color:#fff;font-size:14px;' +
-        'font-weight:bold;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.3);'
-      );
-      document.body.appendChild(banner);
-    } catch (_) {}
-  }
-
-  function hideSessionLostBanner() {
-    try {
-      const banner = document.getElementById('tsh-session-lost');
-      if (banner) banner.remove();
-    } catch (_) {}
-  }
-
-  function alertSessionLost() {
-    if (sessionLostAlerted) return;
-    sessionLostAlerted = true;
-
-    console.warn('[铁塔助手] 保活心跳检测到登录态失效');
-    setMessage('登录态已失效：保活心跳检测到被平台登出，请重新登录');
-
-    // 标题红字告警（后台标签的标题在标签栏可见，是用户最可靠的感知点）
-    try {
-      titleBeforeSessionAlert = document.title;
-      document.title = KEEPALIVE_ALERT_TITLE;
-    } catch (_) {}
-
-    showSessionLostBanner();
-
-    // 尽力弹前台：浏览器大概率忽略后台标签的 focus 调用，成功算赚到
-    try { window.focus(); } catch (_) {}
-  }
-
-  function clearSessionLostAlert() {
-    if (!sessionLostAlerted) return;
-    sessionLostAlerted = false;
-
-    try {
-      if (document.title === KEEPALIVE_ALERT_TITLE) {
-        document.title = titleBeforeSessionAlert || stripTshTitleSuffix(
-          document.title
-        ).trim() || '铁塔e学';
-      }
-    } catch (_) {}
-
-    hideSessionLostBanner();
-    setMessage('登录态已恢复（保活心跳检测正常）');
   }
 
   // 标签切回前台时立即补发一次心跳（限制最小间隔 60 秒，避免频繁切换刷请求）
@@ -3024,12 +2809,7 @@
           </select>
         </div>
         <div class="tsh-speed">
-          <label for="tsh-title-debug" title="开启后标签页标题会显示播放状态（倍速/进度/章节），便于远程监控；默认关闭，此时标签名与未安装插件时完全一致">
-            <input type="checkbox" id="tsh-title-debug"> 标题调试
-          </label>
-        </div>
-        <div class="tsh-speed">
-          <label for="tsh-keepalive" title="列表页定期向平台发轻量请求保持登录会话，防止挂机久了被登出；全程后台运行不改标题不碰焦点，仅检测到被登出时告警">
+          <label for="tsh-keepalive" title="列表页定期向平台发轻量请求保持登录会话，防止挂机久了被登出；全程后台运行不改标题不碰焦点，不影响其他工作">
             <input type="checkbox" id="tsh-keepalive"> 会话保活
           </label>
           <select id="tsh-keepalive-interval" title="保活心跳间隔">
@@ -3116,23 +2896,6 @@
       });
     }
 
-    const titleDebug = panel.querySelector('#tsh-title-debug');
-
-    if (titleDebug) {
-      titleDebug.addEventListener('change', () => {
-        state.titleDebug = titleDebug.checked;
-        saveState();
-        if (state.titleDebug) {
-          setMessage('已开启标题调试：标签页标题将显示播放状态');
-        } else {
-          // 关闭时立即还原平台原标题，标签名恢复与无插件一致
-          restorePlatformTitle();
-          setMessage('已关闭标题调试：标签名已恢复平台默认');
-        }
-        refreshPanel();
-      });
-    }
-
     const keepAliveEnable = panel.querySelector('#tsh-keepalive');
     const keepAliveIntervalSel =
       panel.querySelector('#tsh-keepalive-interval');
@@ -3189,7 +2952,6 @@
     const list = panel.querySelector('#tsh-courses');
     const speedEnable = panel.querySelector('#tsh-speed-enable');
     const speedRate = panel.querySelector('#tsh-speed-rate');
-    const titleDebug = panel.querySelector('#tsh-title-debug');
     const keepAliveEnable = panel.querySelector('#tsh-keepalive');
     const keepAliveIntervalSel =
       panel.querySelector('#tsh-keepalive-interval');
@@ -3198,7 +2960,6 @@
 
     if (speedEnable) speedEnable.checked = Boolean(state.speedEnabled);
     if (speedRate) speedRate.value = String(state.playbackRate || 1);
-    if (titleDebug) titleDebug.checked = Boolean(state.titleDebug);
     if (keepAliveEnable) keepAliveEnable.checked = keepAliveEnabled();
     if (keepAliveIntervalSel) {
       keepAliveIntervalSel.value = String(getKeepAliveMinutes());

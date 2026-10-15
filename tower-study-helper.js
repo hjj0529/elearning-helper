@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         铁塔 e 学自动学习助手
 // @namespace    tower-study-helper
-// @version      1.7.22
-// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课；v1.7.18 新增课程列表页会话保活：默认开启、10分钟一次（5-60分钟可调），用 Web Worker 定时器（不受后台标签降频影响）周期性向平台发轻量同源请求维持登录会话，防止挂机一段时间后被平台登出导致无法继续学习；心跳全程纯后台不改标题不碰焦点不影响用户其他工作，仅当检测到登录态失效时告警（标签标题红字+页面红色横幅+尽力弹前台）；v1.7.19 增强自动翻页可靠性：翻页后课程 ID 识别由单次等待改为每 2 秒重试（最长 30 秒）不再立即暂停，翻页点击 25 秒后列表无变化时自动重试一次翻页，慢网络下多页自动学习不再中断；v1.7.20 会话保活改为纯保活模式：移除登录态检测与告警（启发式判定在登录状态良好时误报"登录已失效"横幅，平台真实登出表现为整页跳转 OA 登录页无需插件判定），只保留周期心跳维持会话；v1.7.21 移除面板"标题调试"功能（含播放页写标题心跳等整套逻辑，该功能已无实际作用），标签名恒与平台一致；v1.7.22 修复"视频已在自动播放但面板停留提示'已点击播放按钮，等待播放器响应'"：进场时序留下的等待类陈旧消息在检测到视频确实播放后自动纠正为"正在播放：第N节"
+// @version      1.7.23
+// @description  自动识别课程ID、过滤已完成和跳过课程、自动播放切换章节；支持分页、新标签页、面板拖动缩放及最后一节弹窗自动确认；修复“直接完结”课程不跳转问题，播放页完结后关闭并回列表刷新再开新课；面板显示学分/学时/章节，移除系统异常跳过名单，默认跳过末节考试课程，PPT章节加载失败自动刷新；增强播放页与列表页信号可靠性；v1.7.3 适配新版(/new/student)接口探查与 ID 识别；v1.7.4 课程列表面板不再逐条显示已完成的课程，减少冗余；v1.7.5 移除面板"捕获接口"文本显示（静默写入 localStorage 供调试）；v1.7.6 调试数据额外写入屏幕外不可见 span(#tsh-debug)；v1.7.7 调试数据额外写入页面标题(TSHDBG:前缀)，便于外部读取定位新版接口与ID字段格式；v1.7.8 移除标题调试，新增倍速播放开关与档位（默认关闭，仅对 HTML5 视频生效）；v1.7.9 恢复轻量标题调试(TSH:前缀，仅标签标题非面板)用于外部监控，倍速被平台重置时自动恢复并计数以观测验证机制；v1.7.10 修正面板标题版本号与运行时 guard 保持一致；v1.7.11 播放页标题心跳改为 5 秒节流（关键字段变化仍即时刷新），并修复详情页进度接口冲刷 page 字段，便于外部 claim/截图标签页；v1.7.12 修复倍速档位切回 1x 不生效（播放器停留在原倍速）及关闭倍速开关不恢复常速的问题，新增首次开启倍速时平台提示弹窗（学习时长按实际学习时间统计，不受倍速切换影响）的自动确认；v1.7.13 修复播放中标签页无法被外部 claim/截图的问题（详情页标题改由播放心跳独占，接口日志不再每秒级改写标题；心跳节流 5s→15s，倍速/状态变化仍即时刷新）；v1.7.14 标题调试默认关闭（标签名与未安装插件时完全一致），面板新增"标题调试"开关，开启后才以可读格式在标签页标题显示播放状态，关闭时立即还原平台原标题；v1.7.15 修复"最后一节弹窗确认后卡在等待平台更新课程状态、不关标签不开新课"：完结轮询链断裂后重启会重置 30 秒计时导致超时分支永远走不到，现改为同一课程等待起点不重置、轮询链异常/路由瞬空不再断裂，超时后平台未更新章节状态则刷新页面重查，仍超时则凭"弹窗已确认+视频已播完"强制进入下一课；v1.7.18 新增课程列表页会话保活：默认开启、10分钟一次（5-60分钟可调），用 Web Worker 定时器（不受后台标签降频影响）周期性向平台发轻量同源请求维持登录会话，防止挂机一段时间后被平台登出导致无法继续学习；心跳全程纯后台不改标题不碰焦点不影响用户其他工作，仅当检测到登录态失效时告警（标签标题红字+页面红色横幅+尽力弹前台）；v1.7.19 增强自动翻页可靠性：翻页后课程 ID 识别由单次等待改为每 2 秒重试（最长 30 秒）不再立即暂停，翻页点击 25 秒后列表无变化时自动重试一次翻页，慢网络下多页自动学习不再中断；v1.7.20 会话保活改为纯保活模式：移除登录态检测与告警（启发式判定在登录状态良好时误报"登录已失效"横幅，平台真实登出表现为整页跳转 OA 登录页无需插件判定），只保留周期心跳维持会话；v1.7.21 移除面板"标题调试"功能（含播放页写标题心跳等整套逻辑，该功能已无实际作用），标签名恒与平台一致；v1.7.22 修复"视频已在自动播放但面板停留提示'已点击播放按钮，等待播放器响应'"：进场时序留下的等待类陈旧消息在检测到视频确实播放后自动纠正为"正在播放：第N节"；v1.7.23 修复"学完关播放页后清单页未刷新、反复重开刚学完课程"死循环：详情页不再与列表页竞争消费完成信号键、写回状态前先读回最新进度不覆盖、新增独立"本会话已学完"清单硬跳过、列表刷新后等数据稳定+缓冲数秒再重新取状态选下一课
 // @match        https://elearning.chinatowercom.cn/*
 // @run-at       document-start
 // @grant        none
@@ -11,14 +11,18 @@
 (() => {
   'use strict';
 
-  if (window.__towerStudyHelper191) return;
-  window.__towerStudyHelper191 = true;
+  if (window.__towerStudyHelper192) return;
+  window.__towerStudyHelper192 = true;
 
-  const VERSION = '1.7.22';
+  const VERSION = '1.7.23';
 
   const STORE_KEY = 'towerStudyHelperCourseIdsV1';
   const STATE_KEY = 'towerStudyHelperAutoStateV152';
   const SKIP_KEY = 'towerStudyHelperManualSkipV1';
+  // v1.7.23：本会话已学完课程清单（独立 key，不随 STATE_KEY 竞态被覆盖）。
+  // 列表卡片状态回传有延迟时，靠它硬性跳过刚学完的课程，杜绝
+  // "开→识别已完成→关→再开"的死循环。
+  const FINISHED_KEY = 'towerStudyHelperFinishedV1';
   const PANEL_UI_KEY = 'towerStudyHelperPanelUiV1';
 
   const PANEL_ID = 'tower-study-helper-panel';
@@ -225,6 +229,35 @@
     } catch (error) {
       console.warn('[铁塔助手] 保存手动跳过名单失败', error);
     }
+  }
+
+  // v1.7.23：已学完清单（独立 localStorage key，免疫 STATE_KEY 覆盖竞态）
+  function readFinishedIds() {
+    try {
+      const value = JSON.parse(localStorage.getItem(FINISHED_KEY) || '[]');
+      return Array.isArray(value)
+        ? value.map(v => String(v).toLowerCase()).filter(Boolean)
+        : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function markCourseFinished(id) {
+    id = String(id || '').trim().toLowerCase();
+    if (!id) return;
+
+    try {
+      const list = readFinishedIds().filter(v => v !== id);
+      list.push(id);
+      // 只保留最近 50 条，避免长期挂课无限增长
+      localStorage.setItem(FINISHED_KEY, JSON.stringify(list.slice(-50)));
+    } catch (_) {}
+  }
+
+  function isCourseFinishedId(id) {
+    id = String(id || '').trim().toLowerCase();
+    return id ? readFinishedIds().includes(id) : false;
   }
 
   function skipKey(course) {
@@ -837,16 +870,16 @@
 
     if (!req || req.action !== 'openNext') return;
 
+    // v1.7.23：详情页绝不消费该信号键（把检查挪到 removeItem 之前）。
+    // 此前详情页自身 1 秒轮询会与列表页 storage 事件竞争消费，抢先吃掉
+    // 后列表页收不到信号、清单页不刷新，详情页随即重开刚学完的课程。
+    if (isDetailPage()) return;
+
     // 消费触发键，避免列表页重复刷新或重复处理。
     try { localStorage.removeItem(NEXT_REQUEST_KEY); } catch (_) {}
 
     if (!isRunning()) {
       setMessage('收到播放页完成信号（当前已暂停，稍后继续）');
-      return;
-    }
-
-    if (isDetailPage()) {
-      setMessage('收到完成信号，但当前不是课程列表标签');
       return;
     }
 
@@ -859,7 +892,11 @@
       }
     } catch (_) {}
 
-    // 标记需要在刷新后由 init 自动打开下一门。
+    // v1.7.23：先从 localStorage 读回最新状态再写入。此前直接用列表页
+    // 内存中的旧 state 加 resumeOpenNext 整体写回，会把详情页刚记录的
+    // visited/queueIndex 进度覆盖掉（storage 监听仅在 running 变化时同步
+    // state），刷新后队列回退 → 重开刚学完的课程 → 死循环。
+    state = loadState();
     state.resumeOpenNext = true;
     saveState();
 
@@ -2094,6 +2131,9 @@
 
     if (!alreadyVisited) state.visited.push(id);
 
+    // v1.7.23：同时写入独立的已学完清单，供选课时硬跳过
+    markCourseFinished(id);
+
     state.currentId = id;
     saveState();
     finishingCourse = true;
@@ -2129,10 +2169,14 @@
     }
 
     const skipped = courses.filter(item => shouldSkipCourse(item));
-    const completed = courses.filter(item => item.status === 'completed');
+    const completed = courses.filter(item =>
+      item.status === 'completed' || isCourseFinishedId(item.id)
+    );
 
     const candidates = courses.filter(item =>
-      item.status !== 'completed' && !shouldSkipCourse(item)
+      item.status !== 'completed' &&
+      !shouldSkipCourse(item) &&
+      !isCourseFinishedId(item.id)
     );
 
     // 优先学习学时低的课程，省时间；学时相同时按学分、章节数升序。
@@ -2302,6 +2346,14 @@
       if (state.visited.some(v =>
         String(v).toLowerCase() === item.id.toLowerCase()
       )) {
+        state.queueIndex++;
+        continue;
+      }
+
+      // v1.7.23：本会话刚学完的课程硬跳过（独立清单）。列表卡片状态
+      // 回传有延迟、或状态被竞态覆盖时，这是防"重开刚学完课程"死循环
+      // 的最后一道闸。
+      if (isCourseFinishedId(item.id)) {
         state.queueIndex++;
         continue;
       }
@@ -3201,11 +3253,55 @@
     if (isRunning() && isListPage() && state.resumeOpenNext) {
       state.resumeOpenNext = false;
       saveState();
-      setTimeout(() => {
+
+      // v1.7.23：刷新后不急着开课。先等课程列表卡片渲染完成且数据签名
+      // 连续 2 秒不变（说明列表数据已加载稳定），并至少缓冲 3 秒让平台
+      // 把刚学完课程的状态回传到列表，然后才重新获取状态、选择下一课；
+      // 最长等 12 秒兜底，超时也照常尝试（此时靠已学完清单硬跳过兜底）。
+      setMessage('列表已刷新，正在等待课程状态数据就绪…');
+
+      const startedAt = Date.now();
+      let lastSig = null;
+      let stableSince = 0;
+
+      const readyTimer = setInterval(() => {
+        if (!isRunning()) {
+          clearInterval(readyTimer);
+          return;
+        }
+
+        const courses = getCourseList();
+        const sig = courses
+          .map(c => `${c.name}|${c.status}`)
+          .join(';;');
+        const now = Date.now();
+
+        if (!courses.length) {
+          lastSig = null;
+          stableSince = 0;
+        } else if (sig === lastSig) {
+          if (!stableSince) stableSince = now;
+        } else {
+          lastSig = sig;
+          stableSince = now;
+        }
+
+        const stableFor = stableSince ? now - stableSince : 0;
+        const ready = stableFor >= 2000 && now - startedAt >= 3000;
+        const timedOut = now - startedAt >= 12000;
+
+        if (!ready && !timedOut) return;
+
+        clearInterval(readyTimer);
         if (!isRunning()) return;
-        setMessage('正在打开下一门课程');
+
+        setMessage(
+          ready
+            ? '课程状态数据已就绪，正在打开下一门课程'
+            : '等待课程状态数据超时，尝试打开下一门课程'
+        );
         openNextCourse();
-      }, 1500);
+      }, 500);
     }
 
     setInterval(() => {

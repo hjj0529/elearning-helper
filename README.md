@@ -2,7 +2,7 @@
 
 在线学习平台 e 学的油猴（Tampermonkey）用户脚本：自动遍历课程列表、播放视频、切换章节、确认完结并衔接下一门课程，减少重复的人工操作。
 
- - 当前版本：**v1.7.41**
+  - 当前版本：**v1.7.41**
 - 运行环境：Chrome / Edge + [Tampermonkey](https://www.tampermonkey.net/)（Violentmonkey 亦可）
 - 版本历史：[CHANGELOG.md](CHANGELOG.md)
 
